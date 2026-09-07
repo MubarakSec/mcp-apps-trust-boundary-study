@@ -1,0 +1,10 @@
+{"runId":"func-baseline-5","mode":"baseline","seq":1,"ts":"2026-09-07T20:10:26.524Z","channel":"tools/call","decision":"deny","reason":"tool visibility: [\"model\"]","consented":null,"tPolicyMs":0}
+{"runId":"func-baseline-5","mode":"baseline","seq":1,"ts":"2026-09-07T20:10:36.187Z","channel":"ui/open-link","decision":"allow","reason":"baseline","consented":null,"tPolicyMs":0}
+{"runId":"func-baseline-5","mode":"baseline","seq":1,"ts":"2026-09-07T20:10:44.046Z","channel":"ui/message","decision":"allow","reason":"baseline","consented":null,"tPolicyMs":0}
+{"runId":"func-baseline-5","mode":"baseline","seq":1,"ts":"2026-09-07T20:10:49.446Z","channel":"ui/update-model-context","decision":"allow","reason":"baseline","consented":null,"tPolicyMs":0}
+{"runId":"func-baseline-5","mode":"baseline","seq":1,"ts":"2026-09-07T20:10:57.473Z","channel":"tools/call","decision":"allow","reason":"tool visible to apps","consented":null,"tPolicyMs":0}
+{"runId":"func-baseline-5","mode":"baseline","seq":2,"ts":"2026-09-07T20:10:57.814Z","channel":"tools/call","decision":"allow","reason":"tool visible to apps","consented":null,"tPolicyMs":0}
+{"runId":"func-baseline-5","mode":"baseline","seq":3,"ts":"2026-09-07T20:10:58.125Z","channel":"tools/call","decision":"allow","reason":"tool visible to apps","consented":null,"tPolicyMs":0}
+{"runId":"func-baseline-5","mode":"baseline","seq":4,"ts":"2026-09-07T20:10:58.551Z","channel":"tools/call","decision":"allow","reason":"tool visible to apps","consented":null,"tPolicyMs":0}
+{"runId":"func-baseline-5","mode":"baseline","seq":5,"ts":"2026-09-07T20:10:58.914Z","channel":"tools/call","decision":"allow","reason":"tool visible to apps","consented":null,"tPolicyMs":0}
+{"runId":"func-baseline-5","mode":"baseline","seq":6,"ts":"2026-09-07T20:10:59.319Z","channel":"tools/call","decision":"allow","reason":"tool visible to apps","consented":null,"tPolicyMs":0.1}

@@ -1,0 +1,25 @@
+# Node
+lab/ext-apps/node_modules/
+lab/ext-apps/lab-testbed/runner/node_modules/
+lab/ext-apps/lab-testbed/host-policy/node_modules/
+lab/ext-apps/lab-testbed/host-policy/dist/
+lab/ext-apps/dist/
+**/node_modules/
+
+# Logs & ephemeral
+*.log
+lab/ext-apps/lab-testbed/rec.log
+lab/ext-apps/lab-testbed/srv.log
+lab/ext-apps/lab-testbed/host.log
+lab/ext-apps/lab-testbed/rt.log
+lab/ext-apps/lab-testbed/dbg.log
+lab/ext-apps/lab-testbed/dbg.mjs
+/tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Keep results but ignore backups
+lab/ext-apps/lab-testbed/results-backup-*/
+lab/ext-apps/.git.sdk.bak/

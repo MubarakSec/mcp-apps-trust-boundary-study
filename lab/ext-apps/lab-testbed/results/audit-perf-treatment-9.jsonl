@@ -1,0 +1,10 @@
+{"runId":"perf-treatment-9","mode":"treatment","seq":1,"ts":"2026-09-07T20:28:14.408Z","channel":"tools/call","decision":"deny","reason":"tool visibility: [\"model\"]","consented":null,"tPolicyMs":0.1}
+{"runId":"perf-treatment-9","mode":"treatment","seq":1,"ts":"2026-09-07T20:28:24.897Z","channel":"ui/open-link","decision":"deny","reason":"user denied","consented":false,"tPolicyMs":0}
+{"runId":"perf-treatment-9","mode":"treatment","seq":1,"ts":"2026-09-07T20:28:32.700Z","channel":"ui/message","decision":"deny","reason":"user denied","consented":false,"tPolicyMs":0.3}
+{"runId":"perf-treatment-9","mode":"treatment","seq":1,"ts":"2026-09-07T20:28:38.098Z","channel":"ui/update-model-context","decision":"deny","reason":"user denied","consented":false,"tPolicyMs":0.3}
+{"runId":"perf-treatment-9","mode":"treatment","seq":1,"ts":"2026-09-07T20:28:46.187Z","channel":"tools/call","decision":"allow","reason":"tool visible to apps","consented":null,"tPolicyMs":0}
+{"runId":"perf-treatment-9","mode":"treatment","seq":2,"ts":"2026-09-07T20:28:46.476Z","channel":"tools/call","decision":"allow","reason":"tool visible to apps","consented":null,"tPolicyMs":0}
+{"runId":"perf-treatment-9","mode":"treatment","seq":3,"ts":"2026-09-07T20:28:46.903Z","channel":"tools/call","decision":"allow","reason":"tool visible to apps","consented":null,"tPolicyMs":0}
+{"runId":"perf-treatment-9","mode":"treatment","seq":4,"ts":"2026-09-07T20:28:47.213Z","channel":"tools/call","decision":"allow","reason":"tool visible to apps","consented":null,"tPolicyMs":0.1}
+{"runId":"perf-treatment-9","mode":"treatment","seq":5,"ts":"2026-09-07T20:28:47.544Z","channel":"tools/call","decision":"allow","reason":"tool visible to apps","consented":null,"tPolicyMs":0}
+{"runId":"perf-treatment-9","mode":"treatment","seq":6,"ts":"2026-09-07T20:28:47.906Z","channel":"tools/call","decision":"allow","reason":"tool visible to apps","consented":null,"tPolicyMs":0}
