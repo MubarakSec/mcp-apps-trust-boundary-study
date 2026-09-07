@@ -230,8 +230,8 @@ def build_en():
         "break the browser, escape the sandbox, or run phishing on real people.")
     add_heading(doc, "6.3 Proposed Solution", 2)
     add_para(doc, "The policy layer intercepts interface messages before execution and applies four rules:")
-    add_bullet(doc, "1. Links: allow https only, verify domain and path, and require consent before opening an external link.")
-    add_bullet(doc, "2. Messages and context: require consent for ui/message and ui/update-model-context, show the source, and set size and rate limits.")
+    add_bullet(doc, "1. Links: protocol scheme validation (http/https) and explicit user consent prior to dispatching window.open.")
+    add_bullet(doc, "2. Messages and context: explicit user consent, origin source badge display, and message size caps (4 KB limit).")
     add_bullet(doc, "3. Visible trust boundary: add a persistent marker around the interface stating it is delivered by an external MCP server.")
     add_bullet(doc, "4. Audit: log source, request type, decision, reason, and processing time without storing sensitive data.")
     add_para(doc,
@@ -468,8 +468,8 @@ def build_ar():
         "الهروب من الـ sandbox أو إجراء تجربة تصيد على أشخاص حقيقيين.", rtl=True)
     add_heading(doc, "6.3 الحل المقترح", 2, rtl=True)
     add_para(doc, "تعترض طبقة السياسة رسائل الواجهة قبل تنفيذها، وتطبق أربع قواعد:", rtl=True)
-    add_bullet(doc, "1. الروابط: السماح بـ https فقط، والتحقق من النطاق والمسار، وطلب الموافقة قبل فتح رابط خارجي.", rtl=True)
-    add_bullet(doc, "2. الرسائل والسياق: طلب الموافقة على ui/message وui/update-model-context، وإظهار المصدر، وتحديد الحجم ومعدل الطلبات.", rtl=True)
+    add_bullet(doc, "1. الروابط: التحقق من مخطط البروتوكول (http/https) وموافقة صريحة قبل فتح الرابط.", rtl=True)
+    add_bullet(doc, "2. الرسائل والسياق: موافقة صريحة، وإظهار شارة المصدر، وحد أقصى لحجم الرسالة (4 كيلوبايت).", rtl=True)
     add_bullet(doc, "3. حد الثقة المرئي: إضافة علامة ثابتة حول الواجهة توضح أنها مقدمة من خادم MCP خارجي.", rtl=True)
     add_bullet(doc, "4. التدقيق: تسجيل المصدر ونوع الطلب والقرار وسببه وزمن المعالجة دون تخزين بيانات حساسة.", rtl=True)
     add_para(doc,

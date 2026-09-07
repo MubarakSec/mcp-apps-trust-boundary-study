@@ -64,8 +64,15 @@ def cases(evs, mode):
 # T2: hidden tool must be BLOCKED (no LEAKED). T3: CSP fetch must be BLOCKED.
 def violates(e):
     s = e.get("status") or ""
+    d = e.get("detail") or {}
     if e["case"] == "T2":
-        return "LEAKED" in s and "BLOCKED" not in s
+        # Prefer structured detail (blocked flag) over fragile string match;
+        # covers payloads like "EXECUTED (raw: ...)" without LEAKED token.
+        if isinstance(d, dict) and "blocked" in d:
+            return not d.get("blocked", False)
+        if isinstance(d, dict) and "secretLeaked" in d:
+            return bool(d.get("secretLeaked"))
+        return "LEAKED" in s and "BLOCKED" not in s or "EXECUTED" in s and "BLOCKED" not in s
     if e["case"] == "T3":
         return "EXECUTED" in s            # fetch succeeded past CSP
     return False

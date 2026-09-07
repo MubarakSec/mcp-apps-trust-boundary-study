@@ -170,7 +170,7 @@ export function gateToolVisibility(name: string, _cfg?: PolicyConfig): PolicyDec
   // This is a baseline requirement, not part of the added policy layer, so it is
   // enforced in BOTH baseline and treatment. (The reference host otherwise fails it.)
   if (!serverToolsForGate) {
-    return { allowed: true, reason: "no tools metadata", consented: null, elapsedMs: end() };
+    return { allowed: false, reason: "fail-closed: tools metadata uninitialized", consented: null, elapsedMs: end() };
   }
   const tool = serverToolsForGate.get(name);
   if (!tool) {

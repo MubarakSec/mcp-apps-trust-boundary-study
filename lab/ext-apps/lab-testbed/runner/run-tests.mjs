@@ -7,7 +7,7 @@
  * Usage:
  *   npx tsx lab-testbed/runner/run-tests.mjs [--mode baseline|treatment] [--run <id>]
  */
-import { chromium } from "./node_modules/playwright-core/index.mjs";
+import { chromium } from "playwright-core";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -296,7 +296,7 @@ async function runTests() {
         const deadline = Date.now() + 7000;
         let cur = prev;
         while (Date.now() < deadline) {
-          await sleep(120);
+          await sleep(10);
           cur = await innerFrame.locator("[data-testid=status]").textContent({ timeout: 2000 }).catch(()=>prev) ?? prev;
           if (cur !== prev && cur.includes("time:")) break;
         }

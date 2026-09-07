@@ -47,7 +47,8 @@
     "examples/*",
     "lab-testbed/ui-legit",
     "lab-testbed/ui-untrusted",
-    "lab-testbed/host-policy"
+    "lab-testbed/host-policy",
+    "lab-testbed/runner"
   ],
   "scripts": {
     "start": "npm run examples:dev",
