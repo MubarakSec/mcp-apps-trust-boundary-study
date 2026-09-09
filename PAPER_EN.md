@@ -12,7 +12,7 @@ The Model Context Protocol (MCP) standardizes how Large Language Model (LLM) age
 
 In this paper, we present, to our knowledge, the first empirical evaluation of the trust boundary between what browser sandboxing technically forbids and what the host client must govern by policy. We show that a fully specification-compliant baseline host, while successfully preventing direct DOM access and unauthorized network egress, permits untrusted applications to exfiltrate sensitive data (`SYNTHETIC_SECRET_001`) through authorized host channels without explicit user approval. 
 
-To resolve this vulnerability, we design, implement, and evaluate a lightweight host-side policy layer governed by four deterministic rules: protocol scheme validation, payload bounds (4 KB cap), explicit user consent gating, and a persistent visual provenance badge. Across an automated testbed of 41 experimental runs (yielding 180 granular latency measurements in headless Chromium), our proposed policy layer reduces unapproved sensitive actions from **15/15 down to 0/15**, completely eliminates secret leakage (10 events to 0), and demonstrates functional utility preservation across all three host-mediated channels in a dedicated confirmation trial. Furthermore, in-engine audit measurements demonstrate that the policy enforcement layer imposes a negligible median processing overhead of **0.0 ms** ($< 0.1\\text{ ms}$), well beneath our pre-established operational threshold of 20 ms. These findings confirm all three research hypotheses (H1, H2, and H3 Accepted) and provide concrete implementation guidelines for secure host design in agentic computing architectures.
+To resolve this vulnerability, we design, implement, and evaluate a lightweight host-side policy layer governed by four deterministic rules: protocol scheme validation, payload bounds (4 KB cap), explicit user consent gating, and a persistent visual provenance badge. Across an automated testbed of 41 experimental runs (yielding 180 granular latency measurements in headless Chromium), our proposed policy layer reduces unapproved sensitive actions from **15/15 down to 0/15**, completely eliminates secret leakage (10 events to 0), and demonstrates functional utility preservation across all three host-mediated channels in a dedicated confirmation trial ($n=1$). Furthermore, in-engine audit telemetry across all intercepted channels ($n=410$ events) demonstrates that the policy enforcement layer imposes a negligible median processing overhead of **$\le 0.1\text{ ms}$** ($0.0\text{ ms}$ for tools and external links, $0.1\text{ ms}$ for chat messages and context updates; mean $0.06\text{ ms}$, maximum $1.6\text{ ms}$ under nested context serialization), well beneath our pre-established operational threshold of 20 ms. These findings confirm all three research hypotheses (H1, H2, and H3 Accepted) and provide concrete implementation guidelines for secure host design in agentic computing architectures.
 
 **Keywords:** Model Context Protocol (MCP), MCP Apps, LLM Agent Security, Host-Mediated Capabilities, Iframe Sandboxing, Prompt Injection, Trust Boundaries.
 
@@ -214,9 +214,9 @@ We implemented a fully automated, local testbed deployed across four dedicated n
    - `get-time`: Benign utility tool returning an ISO timestamp, callable by all applications (used for baseline performance testing).
    - `read-secret`: Sensitive tool configured with model-only visibility (`visibility: ["model"]`), containing `SYNTHETIC_SECRET_001`.
    - `show-offer`: Tool serving the untrusted attack console UI.
-2. **Exfiltration Receiver (`localhost:9999`):** An independent HTTP listener with an in-memory hit counter and append-only disk log (`receiver-hits.jsonl`), exposing `/exfil` to log exfiltration events.
+2. **Exfiltration Receiver (`localhost:9999`):** An independent HTTP listener with an in-memory hit counter and append-only disk log (`receiver-hits.jsonl`), exposing `/exfil` to log exfiltration events and `/reset` to clear state between runs. *(Note on telemetry: because the test runner issues `POST /reset` before each test run, `receiver-hits.jsonl` on disk reflects the post-reset state of the final benchmark run, while the per-run event files record the verified hit state captured prior to reset.)*
 3. **Host Application (`localhost:8090`):** Vite + React application providing conversational message logs, context displays, and the policy enforcement engine.
-4. **Sandbox Proxy (`localhost:8091`):** Isolated origin serving `sandbox.html` to instantiate the inner untrusted iframe.
+4. **Sandbox Proxy (`localhost:8091`):** Isolated origin serving `sandbox.html` to instantiate the inner untrusted iframe. In accordance with SEP-1865, the iframe enforces `sandbox="allow-scripts allow-same-origin allow-forms"`; the `allow-forms` permission is specifically required to support interactive controls (such as search inputs and submit buttons) in legitimate MCP Apps without breaking user interaction.
 
 ```
 +-------------------------------------------------------------------------------------+
@@ -282,10 +282,10 @@ The evaluation protocol comprised **41 automated experimental runs**:
 | **H1: CSP Network Egress (T3)** | $0 / 5$ leaks | $0 / 5$ leaks | $0 / 1$ leaks | $0 / 10$ total leaks | **H1 ACCEPT** |
 | **H2: Unapproved Sensitive Actions** | **15 / 15 executed** | **0 / 15 executed** | N/A | **100% reduction** | **H2 ACCEPT** |
 | **H2: Secret Delivered via Chat/Context**| **10 / 10 delivered**| **0 / 10 delivered** | N/A | **100% prevented** | **H2 ACCEPT** |
-| **H2: Utility Preservation (Consented)** | N/A | N/A | **3 / 3 executed** | 100% utility | **H2 ACCEPT** |
+| **H2: Utility Preservation (Consented)** | N/A | N/A | **3 / 3 executed** | 100% utility ($n=1$) | **H2 ACCEPT** |
 | **H3: End-to-End Latency (Median)** | $327.4\text{ ms}$ | $318.3\text{ ms}$ | N/A | $-9.1\text{ ms}$ | **H3 ACCEPT** |
 | **H3: End-to-End Latency (95th %ile)** | $471.0\text{ ms}$ | $474.3\text{ ms}$ | N/A | $+3.3\text{ ms}$ | **H3 ACCEPT** |
-| **H3: Pure In-Engine Policy Latency** | $0.0\text{ ms}$ | $0.0\text{ ms}$ | $0.0\text{ ms}$ | $< 0.1\text{ ms}$ | **H3 ACCEPT** |
+| **H3: Pure In-Engine Policy Latency** | $0.0\text{ ms}$ | $\le 0.1\text{ ms}$ | $\le 0.1\text{ ms}$ | Med $\le 0.1\text{ ms}$, Max $1.6\text{ ms}$ | **H3 ACCEPT** |
 
 ```
 H1: MUST Violations (T2/T3)
@@ -298,7 +298,7 @@ Treatment:  [ 0% ]   (0/15 BLOCKED)             ====> ACCEPT
 
 H3: Pure In-Engine Policy Latency Overhead
 Threshold:  |-------------------- 20.0 ms -------------------|
-Measured:   | 0.0 ms |                          ====> ACCEPT
+Measured:   | <= 0.1 ms |                       ====> ACCEPT
 ```
 
 ### 6.2 Evaluation of Hypothesis 1: Specification Compliance
@@ -314,9 +314,9 @@ Under the baseline host, all 15 sensitive capability invocations across the 5 fu
 * T5a successfully injected an adversarial user message into the host chat log.
 * T5b successfully updated the model context payload with synthetic secret data.
 
-Under the treatment host with default-deny consent, **zero out of 15 sensitive actions executed** across all 5 functional runs. From a statistical perspective, observing 0 failures out of 15 Bernoulli trials yields a 95% Wilson score binomial confidence interval of $[0.00, 0.218]$ (upper bound 21.8% maximum residual failure rate at $\alpha=0.05$), compared to $15/15$ in baseline with a 95% confidence interval of $[0.796, 1.00]$. Invocations of `ui/open-link` were denied, and `ui/message` and `ui/update-model-context` returned an unfulfilled promise with error status `Policy denied: user denied`. The secret was successfully contained. Invocations of `ui/open-link` were denied, and `ui/message` and `ui/update-model-context` returned an unfulfilled promise with error status `Policy denied: user denied`. The secret was successfully contained.
+Under the treatment host with default-deny consent, **zero out of 15 sensitive actions executed** across all 5 functional runs. From a statistical perspective, observing 0 failures out of 15 Bernoulli trials yields a 95% Wilson score binomial confidence interval of $[0.00, 0.218]$ (upper bound 21.8% maximum residual failure rate at $\alpha=0.05$), compared to $15/15$ in baseline with a 95% confidence interval of $[0.796, 1.00]$. Invocations of `ui/open-link` were denied, and `ui/message` and `ui/update-model-context` returned an unfulfilled promise with error status `Policy denied: user denied`. The secret was successfully contained.
 
-To verify that security did not break legitimate functionality, run `func-treatment-allow-1` tested treatment with simulated user approval. In this run, **all 3 sensitive channels executed successfully**, confirming zero false blocks on user-sanctioned workflows. **Hypothesis 2 is Accepted.**
+To verify that security did not break legitimate functionality, run `func-treatment-allow-1` tested treatment with simulated user approval. In this dedicated single-run proof-of-concept trial ($n=1$), **all 3 sensitive channels executed successfully**, confirming zero false blocks on user-sanctioned workflows without requiring repeated multi-run benchmarking. **Hypothesis 2 is Accepted.**
 
 ### 6.4 Evaluation of Hypothesis 3: Latency Overhead
 Latency was evaluated across 30 alternating performance runs, capturing 90 latency points for baseline and 90 latency points for treatment via the benign `get-time` channel (T7).
@@ -330,12 +330,23 @@ Median Latency        327.4 ms            318.3 ms            -9.1 ms
 95th Percentile       471.0 ms            474.3 ms            +3.3 ms
 Min Latency           178.6 ms            198.2 ms            +19.6 ms
 Max Latency           521.4 ms            503.2 ms            -18.2 ms
-In-Engine Policy      0.0 ms              0.0 ms              0.0 ms (< 0.1 ms)
+In-Engine Policy      0.0 ms              <= 0.1 ms           Med <= 0.1 ms, Max 1.6 ms
 ```
 
-The observed median difference between treatment and baseline was **$-9.1\text{ ms}$**, and the 95th percentile delta was **$+3.3\text{ ms}$**. Both values fall well within the pre-defined operational threshold of $\le 20\text{ ms}$. 
+#### Granular In-Engine Policy Decision Latency Breakdown Across Channels
+To achieve complete scientific transparency, pure in-engine evaluation times ($t_{\text{policy}}$) were captured across all 410 intercepted capability invocations in the audit telemetry:
 
-Audit logs capturing the internal JavaScript execution duration ($t_{\\text{policy}}$) recorded a median evaluation time of **$0.0\text{ ms}$** (maximum observed was $0.8\text{ ms}$ during initial regex compilation). The minor variations observed in end-to-end latency reflect test harness sampling quantization rather than cryptographic or computational overhead. **Hypothesis 3 is Accepted.**
+| Intercepted Channel | Intercepting Function | Nature of Policy Check | Median Latency | Mean Latency | Maximum Observed |
+|:---|:---|:---|:---:|:---:|:---:|
+| `tools/call` | `gateToolVisibility` | In-memory lookup and visibility array check | **0.0 ms** | 0.03 ms | 1.3 ms |
+| `ui/open-link` | `gateOpenLink` | URL scheme prefix matching (`http://`, `https://`) | **0.0 ms** | 0.02 ms | 0.1 ms |
+| `ui/message` | `gateMessage` | UTF-8 encoding, JSON serialization, 4 KB boundary check | **0.1 ms** | 0.14 ms | 0.6 ms |
+| `ui/update-model-context`| `gateContext` | Context payload inspection & 4 KB boundary check | **0.1 ms** | 0.18 ms | 1.6 ms |
+| **All Channels Combined (n=410)** | Unified Policy Engine | Synchronous deterministic policy evaluation | **0.0 ms** ($\le 0.1\text{ ms}$) | 0.06 ms | 1.6 ms |
+
+The observed median difference in end-to-end tool execution between treatment and baseline was **$-9.1\text{ ms}$**, and the 95th percentile delta was **$+3.3\text{ ms}$**. Both values fall well within the pre-defined operational threshold of $\le 20\text{ ms}$. 
+
+Audit logs capturing the internal JavaScript execution duration ($t_{\text{policy}}$) across all 410 recorded events demonstrated an overall median evaluation time of **$0.0\text{ ms}$** ($\le 0.1\text{ ms}$ across channels; mean $0.06\text{ ms}$, with a worst-case maximum of $1.6\text{ ms}$ during JSON serialization of deeply nested context payloads). Both the median overhead and worst-case ceiling reside orders of magnitude below the 20 ms operational threshold. **Hypothesis 3 is Accepted.**
 
 ---
 
@@ -357,6 +368,7 @@ We explicitly acknowledge the following academic boundaries and limitations of t
 2. **Sample Size Scope:** While the latency benchmark evaluates $n=180$ measurements ($n=90$ per mode), the functional capability tests comprised $n=5$ automated runs per mode and a single dedicated proof-of-concept utility run (`treatment-allow-1`). While adequate for deterministic protocol verification in controlled lab settings, broad statistical generalization to non-deterministic, open-web deployments requires larger-scale automated testing.
 3. **Synthetic Attack Artifacts:** The study employed synthetic test tokens (`SYNTHETIC_SECRET_001`) and dedicated mock services rather than live enterprise authentication tokens, cloud credentials, or external API endpoints.
 4. **Absence of Human-Subject Behavioral Testing:** While the visual provenance badge (`SourceBadge`) was empirically validated for DOM presence, correct CSS positioning, and immutability from within the iframe, this study did not evaluate human cognitive resistance to habituation, warning blindness, or "click-through" approval fatigue in live conversational workflows.
+5. **Untested 4 KB Boundary Test Vector:** While the 4 KB payload size boundary check is formally implemented in the host policy engine (`checkMessage` and `checkContext` in `policy-layer.ts:105`), the automated test suite in this benchmark iteration evaluated nominal exfiltration payloads rather than an adversarial fuzzing sweep pushing payloads strictly beyond 4096 bytes. Exhaustive boundary stress-testing remains designated for future testbed expansions.
 
 ---
 
@@ -364,7 +376,7 @@ We explicitly acknowledge the following academic boundaries and limitations of t
 
 The integration of interactive web applications into LLM agent workflows represents a transformative leap in user experience, but it introduces a subtle and dangerous architectural vulnerability. Our experimental investigation demonstrates that **browser iframe sandboxing and Content Security Policies are insufficient on their own to protect conversational clients**. Because the MCP Apps specification explicitly allows host-mediated capability dispatch, an untrusted application can bypass technical isolation without breaking the sandbox by exploiting standard protocol channels (`ui/open-link`, `ui/message`, `ui/update-model-context`).
 
-We proved that a lightweight, deterministic host policy layer solves this vulnerability. By combining protocol scheme validation, payload bounds (4 KB cap), explicit user consent gates, and visual provenance markers, our prototype reduced sensitive actions executed without approval from **15/15 down to 0/15**, completely halted secret exfiltration, preserved 100% of legitimate application utility, and introduced **0.0 ms** of in-engine processing overhead.
+We proved that a lightweight, deterministic host policy layer solves this vulnerability. By combining protocol scheme validation, payload bounds (4 KB cap), explicit user consent gates, and visual provenance markers, our prototype reduced sensitive actions executed without approval from **15/15 down to 0/15**, completely halted secret exfiltration, preserved 100% of legitimate application utility, and introduced **$\le 0.1\text{ ms}$** of median in-engine processing overhead (0.0 ms for tools/links).
 
 ### Recommendations for Future MCP Standards:
 1. **Mandate Default-Deny Semantics:** Future revisions of the MCP Apps specification should upgrade host-mediated capability approval from discretionary guidance to a formal **MUST prompt** requirement.
@@ -386,7 +398,7 @@ lab/ext-apps/lab-testbed/
 │   └── src/index.tsx            # SourceBadge provenance component & interactive consent modal
 ├── server/
 │   ├── server.mjs               # Streamable HTTP MCP Server (:3001) hosting 4 tools & 2 UIs
-│   └── receiver.mjs             # Out-of-band exfiltration receiver (:9999) with /hits endpoint
+│   └── receiver.mjs             # Out-of-band exfiltration receiver (:9999) with /hits and /reset endpoints
 ├── ui-legit/                    # Legitimate weather dashboard UI resource bundle
 ├── ui-untrusted/                # Untrusted attack console UI bundle with 6 trigger vectors
 ├── runner/

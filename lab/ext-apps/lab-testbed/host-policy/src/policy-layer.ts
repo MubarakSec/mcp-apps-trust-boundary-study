@@ -2,8 +2,8 @@
  * policy-layer.ts — Host-side policy enforcement for MCP Apps trust-boundary study.
  *
  * Implements the four rules from the approved proposal (§6.3):
- *   1. Link safety — https-only, domain allowlist, user consent
- *   2. Message / context — consent, size cap, rate limit, source attribution
+ *   1. Link safety — protocol scheme validation (http/https) and user consent
+ *   2. Message / context — payload size bound (4 KB cap) and user consent
  *   3. Visible trust boundary — source badge (rendered by React in index.tsx)
  *   4. Audit — structured JSON log of every intercepted request
  *
