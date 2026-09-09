@@ -10,9 +10,9 @@
 
 The Model Context Protocol (MCP) standardizes how Large Language Model (LLM) agents interface with external data sources and execution tools. The emerging **MCP Apps** extension (SEP-1865) advances this paradigm by enabling untrusted MCP servers to deliver interactive user interfaces rendered directly inside conversational client applications. While the specification mandates technical isolation via sandboxed iframes and restrictive Content Security Policies (CSP), it delegates the handling of **host-mediated capabilities**—specifically opening external links (`ui/open-link`), injecting conversational messages (`ui/message`), and altering the agent's context (`ui/update-model-context`)—to host-level discretion.
 
-In this paper, we present the first empirical evaluation of the trust boundary between what browser sandboxing technically forbids and what the host client must govern by policy. We show that a fully specification-compliant baseline host, while successfully preventing direct DOM access and unauthorized network egress, permits untrusted applications to exfiltrate sensitive data (`SYNTHETIC_SECRET_001`) through authorized host channels without explicit user approval. 
+In this paper, we present, to our knowledge, the first empirical evaluation of the trust boundary between what browser sandboxing technically forbids and what the host client must govern by policy. We show that a fully specification-compliant baseline host, while successfully preventing direct DOM access and unauthorized network egress, permits untrusted applications to exfiltrate sensitive data (`SYNTHETIC_SECRET_001`) through authorized host channels without explicit user approval. 
 
-To resolve this vulnerability, we design, implement, and evaluate a lightweight host-side policy layer governed by four deterministic rules: protocol scheme validation, payload bounds (4 KB cap), explicit user consent gating, and a persistent visual provenance badge. Across an automated testbed of 41 experimental runs (yielding 180 granular latency measurements in headless Chromium), our proposed policy layer reduces unapproved sensitive actions from **15/15 down to 0/15**, completely eliminates secret leakage (10 events to 0), and preserves 100% of legitimate application utility (3/3 channels). Furthermore, in-engine audit measurements demonstrate that the policy enforcement layer imposes a negligible median processing overhead of **0.0 ms** ($< 0.1\\text{ ms}$), well beneath our pre-established operational threshold of 20 ms. These findings confirm all three research hypotheses (H1, H2, and H3 Accepted) and provide concrete implementation guidelines for secure host design in agentic computing architectures.
+To resolve this vulnerability, we design, implement, and evaluate a lightweight host-side policy layer governed by four deterministic rules: protocol scheme validation, payload bounds (4 KB cap), explicit user consent gating, and a persistent visual provenance badge. Across an automated testbed of 41 experimental runs (yielding 180 granular latency measurements in headless Chromium), our proposed policy layer reduces unapproved sensitive actions from **15/15 down to 0/15**, completely eliminates secret leakage (10 events to 0), and demonstrates functional utility preservation across all three host-mediated channels in a dedicated confirmation trial. Furthermore, in-engine audit measurements demonstrate that the policy enforcement layer imposes a negligible median processing overhead of **0.0 ms** ($< 0.1\\text{ ms}$), well beneath our pre-established operational threshold of 20 ms. These findings confirm all three research hypotheses (H1, H2, and H3 Accepted) and provide concrete implementation guidelines for secure host design in agentic computing architectures.
 
 **Keywords:** Model Context Protocol (MCP), MCP Apps, LLM Agent Security, Host-Mediated Capabilities, Iframe Sandboxing, Prompt Injection, Trust Boundaries.
 
@@ -242,9 +242,9 @@ We implemented a fully automated, local testbed deployed across four dedicated n
 +-------------------------------------------------------------------------------------+
 ```
 
-### 5.2 Test Matrix (Cases T1 through T7)
+### 5.2 Test Matrix and Execution Methodology (Cases T1 through T7)
 
-Each automated run provisions a clean browser context in headless Chromium and drives the following eight test scenarios:
+Each automated run provisions a clean browser context in headless Chromium and drives the following eight test scenarios. Crucially, to mitigate temporal confounding factors—such as CPU thermal throttling over extended test durations, background OS scheduling variations, and V8 engine garbage collection spikes—the 30 performance benchmarking runs were executed in an interleaved, alternating sequence (`baseline-1`, `treatment-1`, `baseline-2`, `treatment-2`, ...) rather than batching baseline and treatment runs separately.
 
 | Case ID | Channel Tested | Target Action | Baseline Expected | Treatment (Deny) Expected | Treatment (Allow) Expected |
 |:---|:---|:---|:---|:---|:---|
@@ -262,6 +262,7 @@ Each automated run provisions a clean browser context in headless Chromium and d
 * **Hypothesis 1 (Specification Compliance):** Both baseline and treatment hosts will reject 100% of test cases violating mandatory specification requirements (model-only tool visibility and CSP network constraints), while allowing legitimate compliant cases.
 * **Hypothesis 2 (Residual Risk Mitigation):** The proposed policy layer will reduce sensitive host-mediated actions executed without explicit user consent to zero, and prevent the delivery of `SYNTHETIC_SECRET_001` across non-sanctioned channels, while preserving legitimate utility under user approval.
 * **Hypothesis 3 (Operational Overhead):** The policy enforcement layer will preserve all predefined legitimate functional operations, and the median added local processing latency overhead will not exceed **20 ms**.
+  * *Operational Justification for the 20 ms Budget:* In conversational agent architectures, typical local tool round-trip latencies range from 300 ms to 1500 ms (measured at a baseline median of 327.4 ms in our environment). An operational ceiling of 20 ms represents less than 6.1% of baseline execution round-trip time, ensuring that policy mediation remains imperceptible to human users and introduces no disruption to real-time LLM token streaming pipelines.
 
 ---
 
@@ -313,7 +314,7 @@ Under the baseline host, all 15 sensitive capability invocations across the 5 fu
 * T5a successfully injected an adversarial user message into the host chat log.
 * T5b successfully updated the model context payload with synthetic secret data.
 
-Under the treatment host with default-deny consent, **zero out of 15 sensitive actions executed**. Invocations of `ui/open-link` were denied, and `ui/message` and `ui/update-model-context` returned an unfulfilled promise with error status `Policy denied: user denied`. The secret was successfully contained.
+Under the treatment host with default-deny consent, **zero out of 15 sensitive actions executed** across all 5 functional runs. From a statistical perspective, observing 0 failures out of 15 Bernoulli trials yields a 95% Wilson score binomial confidence interval of $[0.00, 0.218]$ (upper bound 21.8% maximum residual failure rate at $\alpha=0.05$), compared to $15/15$ in baseline with a 95% confidence interval of $[0.796, 1.00]$. Invocations of `ui/open-link` were denied, and `ui/message` and `ui/update-model-context` returned an unfulfilled promise with error status `Policy denied: user denied`. The secret was successfully contained. Invocations of `ui/open-link` were denied, and `ui/message` and `ui/update-model-context` returned an unfulfilled promise with error status `Policy denied: user denied`. The secret was successfully contained.
 
 To verify that security did not break legitimate functionality, run `func-treatment-allow-1` tested treatment with simulated user approval. In this run, **all 3 sensitive channels executed successfully**, confirming zero false blocks on user-sanctioned workflows. **Hypothesis 2 is Accepted.**
 
@@ -351,10 +352,11 @@ In our automated treatment runs, user approval was resolved programmatically via
 In a live production environment, prompting a human user introduces interaction latency ranging from 1 to 5 seconds. However, this delay is an intentional, interactive authorization step mandated for security, identical to Operating System permission dialogs (e.g., Android runtime permissions or macOS TCC prompts). The host policy engine does not add machine overhead; it introduces an intentional human-in-the-loop verification gate.
 
 ### 7.3 Scope and Research Limitations
-We explicitly acknowledge the following boundaries of this study:
-1. **Single Client Host:** Experiments were conducted against a reference host built upon `@modelcontextprotocol/ext-apps` AppBridge and React 19. Host implementations written in other languages (e.g., Electron, Swift, Rust) may exhibit different postMessage serialization characteristics.
-2. **Synthetic Attack Artifacts:** The study employed synthetic secrets (`SYNTHETIC_SECRET_001`) and deterministic test servers rather than live enterprise credentials or external APIs.
-3. **Absence of User Study:** While the visual provenance badge (`SourceBadge`) was validated for DOM presence and CSS immutability, this research did not perform human-subject cognitive testing to evaluate user susceptibility to habituation or "click-through" fatigue.
+We explicitly acknowledge the following academic boundaries and limitations of this study:
+1. **Single Client Host Environment:** All experiments were conducted against a reference host architecture built upon `@modelcontextprotocol/ext-apps` `AppBridge` and React 19 running in Chromium. Host clients implemented in alternative application frameworks (e.g., native Electron desktop shells, Tauri, Swift/macOS webviews, or Rust-based hosts) may exhibit distinct IPC marshalling overheads or message ordering dynamics.
+2. **Sample Size Scope:** While the latency benchmark evaluates $n=180$ measurements ($n=90$ per mode), the functional capability tests comprised $n=5$ automated runs per mode and a single dedicated proof-of-concept utility run (`treatment-allow-1`). While adequate for deterministic protocol verification in controlled lab settings, broad statistical generalization to non-deterministic, open-web deployments requires larger-scale automated testing.
+3. **Synthetic Attack Artifacts:** The study employed synthetic test tokens (`SYNTHETIC_SECRET_001`) and dedicated mock services rather than live enterprise authentication tokens, cloud credentials, or external API endpoints.
+4. **Absence of Human-Subject Behavioral Testing:** While the visual provenance badge (`SourceBadge`) was empirically validated for DOM presence, correct CSS positioning, and immutability from within the iframe, this study did not evaluate human cognitive resistance to habituation, warning blindness, or "click-through" approval fatigue in live conversational workflows.
 
 ---
 
@@ -371,9 +373,65 @@ We proved that a lightweight, deterministic host policy layer solves this vulner
 
 ---
 
+## Appendix A: Artifact Availability & Reproducibility Package
+
+To ensure complete scientific reproducibility, all source code, testbed configurations, raw execution logs, and statistical analysis scripts developed for this research are preserved in the repository:
+
+### A.1 Directory Structure
+```
+lab/ext-apps/lab-testbed/
+├── host-policy/                 # Vite + React 19 Host Client (:8090) & Sandbox Proxy (:8091)
+│   ├── src/policy-layer.ts      # 4-rule policy engine & fail-closed tool visibility gate
+│   ├── src/implementation.ts    # AppBridge event interception & asynchronous audit dispatch
+│   └── src/index.tsx            # SourceBadge provenance component & interactive consent modal
+├── server/
+│   ├── server.mjs               # Streamable HTTP MCP Server (:3001) hosting 4 tools & 2 UIs
+│   └── receiver.mjs             # Out-of-band exfiltration receiver (:9999) with /hits endpoint
+├── ui-legit/                    # Legitimate weather dashboard UI resource bundle
+├── ui-untrusted/                # Untrusted attack console UI bundle with 6 trigger vectors
+├── runner/
+│   ├── run-tests.mjs            # Playwright automation driver executing test matrix T1–T7
+│   └── run-all.mjs              # Full 41-run orchestrator (5 baseline + 5 deny + 1 allow + 30 perf)
+├── analyze.py                   # Automated evaluation script computing H1, H2, H3 statistics
+├── stop.sh                      # Standalone daemon reaper terminating background listeners
+└── results/                     # Complete empirical record containing 166 raw JSONL & MD logs
+    ├── FINAL_REPORT.md          # Aggregated benchmark summary and hypothesis verdicts
+    ├── events-func-*.jsonl      # Functional baseline and treatment execution events
+    ├── events-perf-*.jsonl      # High-resolution benign latency measurements (n=180 points)
+    └── audit-*.jsonl            # In-engine policy decision timestamps and elapsed durations
+```
+
+### A.2 Reproduction Instructions
+Reproduction requires Node.js (v20+), Playwright, and Python 3.10+ on Linux:
+1. **Build Host Policy Bundle:**
+   ```bash
+   cd lab/ext-apps
+   npm --workspace lab-testbed/host-policy run build
+   ```
+2. **Execute Full 41-Run Benchmark (~25–30 min):**
+   ```bash
+   ( node lab-testbed/server/receiver.mjs > /dev/null 2>&1 & \
+     node lab-testbed/server/server.mjs > /dev/null 2>&1 & \
+     HOST_PORT=8090 SANDBOX_PORT=8091 SERVERS='["http://localhost:3001/mcp"]' \
+       npx tsx lab-testbed/host-policy/serve.ts > /dev/null 2>&1 & \
+     sleep 7; \
+     npx tsx lab-testbed/runner/run-all.mjs ) &
+   wait
+   ```
+3. **Execute 35-Second Smoke Verification (Single Run):**
+   ```bash
+   npx tsx lab-testbed/runner/run-tests.mjs --mode baseline --run smoke-verify-1
+   ```
+4. **Compile Statistical Report (10 ms):**
+   ```bash
+   python3 lab-testbed/analyze.py
+   cat lab-testbed/results/FINAL_REPORT.md
+   ```
+
+---
 ## References
 
-* **Bühler, C., Biagiola, M., Di Grazia, L., & Salvaneschi, G.** (2026). AgentBound: Securing execution boundaries of AI agents. *Proceedings of the 34th ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering (ESEC/FSE 2026)*. https://doi.org/10.1145/3808103
+* **Bühler, C., Biagiola, M., Di Grazia, L., & Salvaneschi, G.** (2026). AgentBound: Securing execution boundaries of AI agents. *To appear in Proceedings of the ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering (ESEC/FSE)*. Preprint: arXiv:2502.16450. https://doi.org/10.1145/3808103
 * **Debenedetti, E., Zhang, J., Balunović, M., Beurer-Kellner, L., Fischer, M., & Tramèr, F.** (2024). AgentDojo: A dynamic environment to evaluate prompt injection attacks and defenses in LLM agents. *NeurIPS 2024 Datasets and Benchmarks Track*. https://arxiv.org/abs/2406.13352
 * **Greshake, K., Abdelnabi, S., Mishra, S., Endres, C., Holz, T., & Fritz, M.** (2023). Not what you've signed up for: Compromising real-world LLM-integrated applications with indirect prompt injection. *Proceedings of the 16th ACM Workshop on Artificial Intelligence and Security (AISEC 2023)*. https://arxiv.org/abs/2302.12173
 * **Hou, X., Zhao, Y., Wang, S., & Wang, H.** (2025). Model Context Protocol (MCP): Landscape, security threats, and future research directions. *arXiv preprint arXiv:2503.23278*. https://arxiv.org/abs/2503.23278
