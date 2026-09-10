@@ -128,7 +128,7 @@ def build_paper_en():
 
     # Header
     p_head = section.header.paragraphs[0]
-    p_head.text = "Emirates International University | Faculty of Computing & IT — Research Paper (IEEE Format)"
+    p_head.text = "Emirates International University | Faculty of Engineering & IT — Research Paper (IEEE Format)"
     p_head.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     p_head.runs[0].font.name = "Times New Roman"
     p_head.runs[0].font.size = Pt(8.5)
@@ -159,6 +159,23 @@ def build_paper_en():
     while i < len(lines):
         line = lines[i].rstrip()
 
+        # Markdown Image Detection: ![alt](path)
+        m_img = re.match(r"^!\[(.*?)\]\((.*?)\)$", line.strip())
+        if m_img:
+            alt_text = m_img.group(1)
+            img_rel = m_img.group(2).strip()
+            img_path = os.path.join(WORKSPACE, img_rel)
+            if os.path.exists(img_path):
+                p_img = doc.add_paragraph()
+                p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p_img.paragraph_format.space_before = Pt(8)
+                p_img.paragraph_format.space_after = Pt(2)
+                p_img.paragraph_format.keep_with_next = True
+                r_img = p_img.add_run()
+                r_img.add_picture(img_path, width=Inches(6.8))
+            i += 1
+            continue
+
         # Code Block Delimiter
         if line.startswith("```"):
             if not in_code_block:
@@ -169,6 +186,12 @@ def build_paper_en():
                 continue
             else:
                 in_code_block = False
+                full_code = "\n".join(code_lines)
+                # Skip rendering raw ASCII figure boxes if any remain
+                if any(fig_kw in full_code for fig_kw in ["HOST POLICY ENFORCEMENT ENGINE", "LAB TESTBED TOPOLOGY", "HOST CLIENT"]):
+                    i += 1
+                    continue
+
                 # Render code box
                 box_table = doc.add_table(rows=1, cols=1)
                 box_table.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -192,7 +215,7 @@ def build_paper_en():
                 cp.paragraph_format.space_before = Pt(2)
                 cp.paragraph_format.space_after = Pt(2)
                 cp.paragraph_format.line_spacing = Pt(10)
-                r_code = cp.add_run("\n".join(code_lines))
+                r_code = cp.add_run(full_code)
                 r_code.font.name = "Consolas"
                 r_code.font.size = Pt(8)
                 r_code.font.color.rgb = RGBColor(30, 41, 59)
@@ -473,7 +496,7 @@ def build_paper_ar():
     # Header
     p_head = section.header.paragraphs[0]
     set_rtl(p_head, True)
-    p_head.text = "الجامعة الإماراتية الدولية | كلية الحاسوب وتكنولوجيا المعلومات — ورقة بحثية محكمة"
+    p_head.text = "الجامعة الإماراتية الدولية | كلية الهندسة وتكنولوجيا المعلومات — ورقة بحثية محكمة"
     p_head.alignment = WD_ALIGN_PARAGRAPH.LEFT
     p_head.runs[0].font.name = "Noto Naskh Arabic"
     p_head.runs[0].font.size = Pt(8.5)
@@ -503,15 +526,38 @@ def build_paper_ar():
     while i < len(lines):
         line = lines[i].rstrip()
 
+        # Markdown Image Detection: ![alt](path)
+        m_img = re.match(r"^!\[(.*?)\]\((.*?)\)$", line.strip())
+        if m_img:
+            alt_text = m_img.group(1)
+            img_rel = m_img.group(2).strip()
+            img_path = os.path.join(WORKSPACE, img_rel)
+            if os.path.exists(img_path):
+                p_img = doc.add_paragraph()
+                p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p_img.paragraph_format.space_before = Pt(8)
+                p_img.paragraph_format.space_after = Pt(2)
+                p_img.paragraph_format.keep_with_next = True
+                r_img = p_img.add_run()
+                r_img.add_picture(img_path, width=Inches(6.8))
+            i += 1
+            continue
+
         # Code Block Delimiter
         if line.startswith("```"):
             if not in_code_block:
                 in_code_block = True
+                code_lang = line[3:].strip()
                 code_lines = []
                 i += 1
                 continue
             else:
                 in_code_block = False
+                full_code = "\n".join(code_lines)
+                if any(fig_kw in full_code for fig_kw in ["HOST POLICY ENFORCEMENT ENGINE", "LAB TESTBED TOPOLOGY", "HOST CLIENT", "محرك سياسة المضيف المقترح", "تطبيق المضيف", "طوبولوجيا"]):
+                    i += 1
+                    continue
+
                 box_table = doc.add_table(rows=1, cols=1)
                 box_table.alignment = WD_TABLE_ALIGNMENT.CENTER
                 cell = box_table.rows[0].cells[0]
@@ -534,7 +580,7 @@ def build_paper_ar():
                 cp.paragraph_format.space_before = Pt(2)
                 cp.paragraph_format.space_after = Pt(2)
                 cp.paragraph_format.line_spacing = Pt(10)
-                r_code = cp.add_run("\n".join(code_lines))
+                r_code = cp.add_run(full_code)
                 r_code.font.name = "Consolas"
                 r_code.font.size = Pt(8)
                 r_code.font.color.rgb = RGBColor(30, 41, 59)

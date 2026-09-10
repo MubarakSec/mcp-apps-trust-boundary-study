@@ -1,7 +1,7 @@
 # Evaluating Trust Boundaries in MCP Apps: An Experimental Study of Host-Mediated Capabilities
 
-**Authors:** Prof. Dr. B. Malik Nasir Ali Al-Jabri, Mubarak Walid Al-Hamadi, Yasin Abd Al-Aziz Al-Khalqi, Muhammad Saif Ali Al-Heimi  
-**Institution:** Faculty of Computing and Information Technology, Emirates International University (EIU), Sana'a  
+**Authors:** Prof. Dr. Malik Nasir Ali Al-Jabri (Supervisor), Mubarak Walid Al-Hamadi, Yasin Abd Al-Aziz Al-Khalqi, Muhammad Saif Ali Al-Heimi  
+**Institution:** Faculty of Engineering and Information Technology, Emirates International University (EIU), Sana'a, Yemen  
 **Date:** September 2026  
 
 ---
@@ -37,36 +37,7 @@ The official MCP Apps specification establishes two distinct defensive layers:
 
 Crucially, the specification states that the host *may* prompt the user or apply local rules before servicing these requests, but it leaves the default governance semantics undefined. Consequently, a host that implements only the mandatory isolation primitives—which we define as a **specification-compliant baseline host**—dispatches these capabilities automatically upon request.
 
-```
-+-------------------------------------------------------------------------+
-|                               HOST CLIENT                               |
-|                                                                         |
-|  [ Chat Interface ]    [ LLM Model Context ]    [ System Browser ]      |
-|           ^                      ^                       ^              |
-|           |                      |                       |              |
-|  ==================== HOST POLICY BOUNDARY ==========================   |
-|   (Consent Gating, Scheme Validation, Size Bounds, Provenance Badge)    |
-|  ====================================================================   |
-|           | (ui/message)         | (ui/context)          | (ui/open-link)
-|           +----------------------+-----------------------+              |
-|                                  |                                      |
-|                       [ AppBridge Transport ]                           |
-|                                  |                                      |
-|  +-------------------------------+-----------------------------------+  |
-|  |             HTML5 Sandboxed Iframe (Sandbox Proxy)                |  |
-|  |                                                                   |  |
-|  |   +-----------------------------------------------------------+   |  |
-|  |   |           Untrusted MCP App UI (External Server)          |   |  |
-|  |   |                                                           |   |  |
-|  |   |  [ Attack 1: Direct Network Fetch ] ---> BLOCKED by CSP   |   |  |
-|  |   |  [ Attack 2: Hidden Tool Call ]     ---> BLOCKED by Spec  |   |  |
-|  |   |  [ Attack 3: Link Exfiltration ]    ---> ? POLICY GAP ?   |   |  |
-|  |   |  [ Attack 4: Fake Message Injection ]-> ? POLICY GAP ?   |   |  |
-|  |   |  [ Attack 5: Context Poisoning ]    ---> ? POLICY GAP ?   |   |  |
-|  |   +-----------------------------------------------------------+   |  |
-|  +-------------------------------------------------------------------+  |
-+-------------------------------------------------------------------------+
-```
+![Figure 1: Conceptual overview of the host client trust boundary, highlighting mandatory sandbox constraints and discretionary capability channels.](figures/fig1_trust_boundary.png)
 *Figure 1: Conceptual overview of the host client trust boundary, highlighting mandatory sandbox constraints and discretionary capability channels.*
 
 ### 1.2 Motivation and Research Questions
@@ -132,34 +103,7 @@ In adherence to responsible research practices (detailed in Section 7):
 
 To resolve the governance gap identified in the specification, we architected a modular, host-side policy enforcement engine integrated directly into the host's `AppBridge` lifecycle.
 
-```
-+---------------------------------------------------------------------------------+
-|                        HOST POLICY ENFORCEMENT ENGINE                           |
-|                                                                                 |
-|   1. Scheme Validation Gate                 2. Message & Context Gate           |
-|   +--------------------------+              +-------------------------------+   |
-|   | URL Scheme: http/https   |              | Payload Size: <= 4096 B (4 KB)|   |
-|   | Scheme Check: PASS       |              | Content Verification: PASS    |   |
-|   +--------------------------+              +-------------------------------+   |
-|                |                                        |                       |
-|                v                                        v                       |
-|   +-------------------------------------------------------------------------+   |
-|   |                     Explicit User Consent Resolver                      |   |
-|   |  - Automated Policy: autoConsent == "allow" | "deny"                    |   |
-|   |  - Interactive Modal: DOM event dispatched -> user button click         |   |
-|   +-------------------------------------------------------------------------+   |
-|                |                                        |                       |
-|                +-------------------+--------------------+                       |
-|                                    |                                            |
-|                                    v                                            |
-|   3. Visual Provenance Marker              4. Non-Blocking Structured Audit     |
-|   +---------------------------------+      +--------------------------------+   |
-|   | [SourceBadge] Component         |      | Target: POST http://:3001/audit|   |
-|   | Injected above sandboxed iframe |      | Schema: PolicyEvent (JSONL)    |   |
-|   | Persistent warning indicator    |      | Overhead: <= 0.1 ms (async)    |   |
-|   +---------------------------------+      +--------------------------------+   |
-+---------------------------------------------------------------------------------+
-```
+![Figure 2: Modular architecture of the proposed host-side policy enforcement engine.](figures/fig2_policy_engine.png)
 *Figure 2: Modular architecture of the proposed host-side policy enforcement engine.*
 
 ### 4.1 Rule 1: Protocol Scheme Validation for External Links
@@ -220,29 +164,7 @@ We implemented a fully automated, local testbed deployed across four dedicated n
 3. **Host Application (`localhost:8090`):** Vite + React application providing conversational message logs, context displays, and the policy enforcement engine.
 4. **Sandbox Proxy (`localhost:8091`):** Isolated origin serving `sandbox.html` to instantiate the inner untrusted iframe. In accordance with SEP-1865, the iframe enforces `sandbox="allow-scripts allow-same-origin allow-forms"`; the `allow-forms` permission is specifically required to support interactive controls (such as search inputs and submit buttons) in legitimate MCP Apps without breaking user interaction.
 
-```
-+-------------------------------------------------------------------------------------+
-|                                 LAB TESTBED TOPOLOGY                                |
-|                                                                                     |
-|   [ Playwright Test Runner (headless Chromium) ]                                     |
-|         |                                                                           |
-|         +---> http://localhost:8090/ (Host Client UI)                               |
-|                     |                                                               |
-|                     +---> iframe: http://localhost:8091/ (Sandbox Proxy)            |
-|                                 |                                                   |
-|                                 +---> iframe: ui://lab/untrusted.html (MCP App UI)  |
-|                                             |                                       |
-|                                             +--[Channel T3: Fetch]----> [Port 9999] |
-|                                             |                           (Receiver)  |
-|                                             +--[Channel T4: Link]-----> (Exfil Hit) |
-|                                             |                                       |
-|                                             +--[Channel T2: Secret]---> [Port 3001] |
-|                                             +--[Channel T7: Time]-----> (MCP Server)|
-|                                             |                                       |
-|                                             +--[Channel T5: PostMsg]--> [Port 8090] |
-|                                                                         (Host Chat) |
-+-------------------------------------------------------------------------------------+
-```
+![Figure 3: Laboratory testbed network topology across four isolated local ports (:8090, :8091, :3001, :9999).](figures/fig3_topology.png)
 *Figure 3: Laboratory testbed network topology across four isolated local ports (:8090, :8091, :3001, :9999).*
 
 ### 5.2 Test Matrix and Execution Methodology (Cases T1 through T7)

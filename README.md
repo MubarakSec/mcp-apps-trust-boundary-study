@@ -1,7 +1,7 @@
 # Evaluating Trust Boundaries in MCP Apps — Research Package
 
 > **Emirates International University — 2026/8**  
-> Prof. Dr. B. Malik Nasir Ali Al-Jabri — Mubarak Walid Al-Hamadi — Yasin Abd Al-Aziz Al-Khalqi — Muhammad Saif Ali Al-Heimi
+> Prof. Dr. Malik Nasir Ali Al-Jabri (Supervisor) — Mubarak Walid Al-Hamadi — Yasin Abd Al-Aziz Al-Khalqi — Muhammad Saif Ali Al-Heimi
 
 **One-line:** We measure what the MCP Apps sandbox *technically* blocks vs. what the **host must govern by policy**, then prove a tiny host-side policy layer closes the gap with ~0 ms overhead.
 

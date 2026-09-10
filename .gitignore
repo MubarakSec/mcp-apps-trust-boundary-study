@@ -23,3 +23,8 @@ Thumbs.db
 # Keep results but ignore backups
 lab/ext-apps/lab-testbed/results-backup-*/
 lab/ext-apps/.git.sdk.bak/
+
+# Python cache
+__pycache__/
+*.pyc
+

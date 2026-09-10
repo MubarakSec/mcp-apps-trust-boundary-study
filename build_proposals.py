@@ -73,7 +73,7 @@ def build_en():
              rtl=False, bold=True, size=16, align=WD_ALIGN_PARAGRAPH.CENTER)
     add_para(doc, "Research Proposal", rtl=False, size=12, align=WD_ALIGN_PARAGRAPH.CENTER)
     add_para(doc, "Emirates International University", rtl=False, size=11, align=WD_ALIGN_PARAGRAPH.CENTER)
-    add_para(doc, "Prof. Dr. B. Malik Nasir Ali Al-Jabri; Mubarak Walid Al-Hamadi; Yasin Abd Al-Aziz Al-Khalqi; Muhammad Saif Ali Al-Heimi",
+    add_para(doc, "Prof. Dr. Malik Nasir Ali Al-Jabri (Supervisor); Mubarak Walid Al-Hamadi; Yasin Abd Al-Aziz Al-Khalqi; Muhammad Saif Ali Al-Heimi",
              rtl=False, size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
     add_para(doc, "2026 / 8", rtl=False, size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
 
@@ -331,8 +331,8 @@ def build_ar():
     add_para(doc, "تقييم حدود الثقة في MCP Apps: دراسة تجريبية للقدرات التي يديرها المضيف",
              rtl=True, bold=True, size=16, align=WD_ALIGN_PARAGRAPH.CENTER)
     add_para(doc, "مقترح بحثي", rtl=True, size=12, align=WD_ALIGN_PARAGRAPH.CENTER)
-    add_para(doc, "جامعة الإمارات الدولية", rtl=True, size=11, align=WD_ALIGN_PARAGRAPH.CENTER)
-    add_para(doc, "أ.د. ب. مالك ناصر علي الجبري؛ مبارك وليد الحمادي؛ ياسين عبد العزيز الخالقي؛ محمد سيف علي الحيمي",
+    add_para(doc, "الجامعة الإماراتية الدولية", rtl=True, size=11, align=WD_ALIGN_PARAGRAPH.CENTER)
+    add_para(doc, "أ.د. مالك ناصر علي الجبري (مشرفًا أكاديميًا)؛ مبارك وليد الحمادي؛ ياسين عبد العزيز الخالقي؛ محمد سيف علي الحيمي",
              rtl=True, size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
     add_para(doc, "2026 / 8", rtl=True, size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
 
