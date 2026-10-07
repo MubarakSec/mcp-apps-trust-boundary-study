@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 # Generates the corrected English and Arabic proposal docx files.
+import os
 from docx import Document
 from docx.shared import Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
-W = "/home/mobta/university/malik"
+W = os.path.dirname(os.path.abspath(__file__))
 
 # ----------------------------------------------------------------------------
 # Helpers

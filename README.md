@@ -100,7 +100,7 @@ npm --workspace lab-testbed/host-policy run build
 ### 1. Regenerate proposals (optional)
 
 ```bash
-cd /home/mobta/university/malik
+cd mcp-apps-trust-boundary-study
 python3 build_proposals.py
 # → MCP_Apps_Trust_Boundaries_Proposal_EN.docx  (43 kB)
 # → MCP_Apps_Trust_Boundaries_Proposal_AR.docx  (44 kB)

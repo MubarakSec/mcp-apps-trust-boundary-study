@@ -9,7 +9,7 @@ import os
 import math
 import cairo
 
-OUT_DIR = "/home/mobta/university/malik/figures"
+OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "figures")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # ─── Color Palette (IEEE Computer Society / Systems Security Style) ───────────

@@ -1,6 +1,6 @@
 # Lab Testbed — Trust Boundaries in MCP Apps
 
-> Reproducible harness for the proposal in `/home/mobta/university/malik/` — baseline vs. treatment host, 8 test cases, 41 runs.
+> Reproducible harness for the paper in this repository — baseline vs. treatment host, 8 test cases, 41 runs.
 
 ## Quick start (copy-paste)
 

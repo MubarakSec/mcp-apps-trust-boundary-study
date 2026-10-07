@@ -14,7 +14,7 @@ from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml import parse_xml, OxmlElement
 from docx.oxml.ns import nsdecls, qn
 
-WORKSPACE = "/home/mobta/university/malik"
+WORKSPACE = os.path.dirname(os.path.abspath(__file__))
 
 # ─── XML & Styling Helpers ───────────────────────────────────────────────────
 
